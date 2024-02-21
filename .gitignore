@@ -1,0 +1,5 @@
+dataset/*.csv
+collection/discord-bot/config.json
+__pycache__
+*.pyc
+.venv
