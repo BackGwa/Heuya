@@ -57,3 +57,9 @@ class Dodb:
         """
         print("\n\033[1m\033[31m[DoDB : RuntimeError]\033[0m")
         print(f"\033[1m{title}\n> \033[0m\033[31m{message}\033[0m")
+
+    def log(self, title, message):
+        """
+        로그를 출력합니다.
+        """
+        print(f"\n\033[1m{title}\n> \033[0m\033[36m{message}\033[0m")
