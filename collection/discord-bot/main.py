@@ -84,7 +84,7 @@ async def on_message(message):
         # 데이터셋에 데이터 등록
         db.register(path, [
             now.strftime("%Y%m%d"), now.strftime("%H%M%S"),
-            author, content,
+            author, content.replace(",", ""),
             feel_data[feel], diff
         ])
 
