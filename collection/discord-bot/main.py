@@ -32,12 +32,19 @@ N_WORD      = config["wordlist"]["negative_word"]
 # 기본값 설정
 recent_time = None
 recent_diff = 0
-recent_feel = 0
+recent_feel = 50
 recent_change = 0
 path        = None
 sum_p       = 0
 sum_n       = 0
 sum_x       = 0
+
+# 상태 데이터
+feel_data = {
+    "p" : ["positive", "긍정"],
+    "x" : ["neutrality", "중립"],
+    "n" : ["negative", "부정"]
+}
 
 
 # 클래스 초기화
@@ -84,17 +91,12 @@ async def on_message(message):
 
         # 현재 채팅의 감정 계산
         feel = feeling(diff, content)
-        feel_data = {
-            "p" : "positive",
-            "n" : "negative",
-            "x" : "neutrality"
-        }
 
         # 데이터셋에 데이터 등록
         db.register(path, [
             now.strftime("%Y%m%d"), now.strftime("%H%M%S"),
             author, content.replace(",", ""),
-            feel_data[feel], diff
+            feel_data[feel][0], diff
         ])
 
         # 이전 채팅 시간을 현재 시간으로 설정
@@ -102,8 +104,25 @@ async def on_message(message):
 
 
 @client.tree.command(
+    name="diff",
+    description="이전 대화에 대한, 현재 대화의 연관성 수치를 출력합니다."
+)
+async def diff(interaction):
+    now_diff = difference(recent_time, db.gen_now()[0])
+
+    embed = discord.Embed(
+        description=f"**이전 채팅 시각** : `{db.conv_now(recent_time.strftime('%Y%m%d%H%M%S'))}`",
+        color=0x5bffb1
+    )
+
+    embed.set_author(name="천과 연관성 데이터", url="https://github.com/BackGwa/KiloGwa", icon_url="https://cdn.discordapp.com/icons/1209891794980966430/bfc2a0772e281ada64476d4940e3ffed.webp?size=96")
+    embed.set_footer(text=f"{int(CHAT_RECENT * 100)}% 보다 높아야, 연관성이 높은 것으로 간주되고 있습니다!")
+    embed.add_field(name='연관성', value=f"{calculate(now_diff)}%", inline=False)
+    await interaction.response.send_message(embed=embed)
+
+@client.tree.command(
     name="logs",
-    description="KILOGWA의 최근 로그를 출력합니다."
+    description="최근 로그를 출력합니다."
 )
 async def logs(interaction):
     session = db.session
@@ -115,22 +134,25 @@ async def logs(interaction):
     dt = "N" if date == "N" and time == "N" else f"{date}{time}"
 
     embed = discord.Embed(
-        description=f"**기록 시각** : `{db.conv_now(dt) if dt != 'N' else '(데이터 없음)'}`",
+        description=f"**기록 된 시각** : `{db.conv_now(dt) if dt != 'N' else '(데이터 없음)'}`",
         color=0x5bffb1
     )
 
     embed.set_author(name="천과 데이터 로그", url="https://github.com/BackGwa/KiloGwa", icon_url="https://cdn.discordapp.com/icons/1209891794980966430/bfc2a0772e281ada64476d4940e3ffed.webp?size=96")
     embed.set_footer(text=f"{length}개의 데이터 중 마지막 데이터 입니다.")
-
-    embed.add_field(name='**　**\n최근 대화', value=f"`{text_blurred(text) if text != 'N' else '(데이터 없음)'}`\n**　**", inline=False)
-    embed.add_field(name='이전 대화 연관성', value=recent_diff, inline=True)
-    embed.add_field(name='감정 수치', value=recent_feel, inline=True)
-    embed.add_field(name='변동 수치', value=recent_change, inline=True)
+    embed.add_field(name='**　**\n최근 대화', value=f"||`{text_blurred(text) if text != 'N' else '(데이터 없음)'}`||\n**　**", inline=False)
+    embed.add_field(name='이전 대화 연관성', value=f"{calculate(recent_diff)}%", inline=True)
+    embed.add_field(name='감정 수치', value=f"{recent_feel} ({feel_data[sort_feel(recent_feel)][1]})", inline=True)
+    embed.add_field(name='변동 수치', value="{:+d}".format(recent_change), inline=True)
     embed.add_field(name='긍정', value=sum_p, inline=True)
     embed.add_field(name='중립', value=sum_x, inline=True)
     embed.add_field(name='부정', value=sum_n, inline=True)
-
     await interaction.response.send_message(embed=embed)
+
+
+# 비율 계산
+def calculate(value):
+    return int(value * 100)
 
 
 # 텍스트 모자이크
@@ -168,13 +190,13 @@ def feeling(diff, text):
 
             recent_feel = feel_score                            # 최근 감정 점수를 현재 감정 점수로 설정
 
-        elif recent_feel != 0 and diff < CHAT_OLD:              # 연관성이 없다고 판단되는 채팅이라면,
-            if sort_feel(recent_feel) == "p":                   # 감정 점수가 긍정을 가르키고 있을 때 감정 점수를 긍정 패널티 점수로 나눈 후 반영
-                feel_score += int(feel_value[1:]) / P_PENALTY   
-            elif sort_feel(recent_feel) == "n":                 # 감정 점수가 부정을 가르키고 있을 때 감정 점수를 부정 패널티 점수로 나눈 후 반영
-                feel_score -= int(feel_value[1:]) / N_PENALTY
+        elif recent_feel != 0 and diff < CHAT_OLD:                              # 연관성이 없다고 판단되는 채팅이라면,
+            if sort_feel(recent_feel) == "p":                                   # 감정 점수가 긍정을 가르키고 있을 때 감정 점수를 긍정 패널티 점수로 나눈 후 반영
+                feel_score = 50 + int(int(feel_value[1:]) * P_PENALTY / 2)  
+            elif sort_feel(recent_feel) == "n":                                 # 감정 점수가 부정을 가르키고 있을 때 감정 점수를 부정 패널티 점수로 나눈 후 반영
+                feel_score = 50 - int(int(feel_value[1:]) * N_PENALTY / 2)
             
-            recent_feel = 0                                     # 최근 감정 점수를 0으로 초기화
+            recent_feel = feel_score                                            # 최근 감정 점수를 0으로 초기화
 
     else:                                                       # 최근 감정 점수가 존재하지 않는다면,
         if feel_value[0] == "p":                                # 감정 상태가 긍정이라면, 현재 (50 + 감정 점수 * 긍정 패널티)로 반영
