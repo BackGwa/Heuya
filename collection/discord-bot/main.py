@@ -1,7 +1,9 @@
 import json
 import discord
 
+from discord.ext import commands
 from dodb import Dodb
+
 
 # 설정 파일 불러오기
 with open('./config.json', 'r') as data:
@@ -29,12 +31,18 @@ N_WORD      = config["wordlist"]["negative_word"]
 
 # 기본값 설정
 recent_time = None
-recent_feel = None
+recent_diff = 0
+recent_feel = 0
+recent_change = 0
 path        = None
+sum_p       = 0
+sum_n       = 0
+sum_x       = 0
+
 
 # 클래스 초기화
 db = Dodb(NAME, PATH, DATA_FORMAT)
-client = discord.Client(intents=intents)
+client = commands.Bot(command_prefix='/', intents=intents)
 
 
 # 봇 작동 시작 시
@@ -42,12 +50,13 @@ client = discord.Client(intents=intents)
 async def on_ready():
     global recent_time, recent_feel, path
     recent_time = db.gen_now()[0]
-    recent_feel = 0
-    db.log(f"KILOGWA", "Ready!")
     path = db.file_register()
+    db.log_register()
+    db.log(f"KILOGWA", "Ready!")
 
     activity = discord.Game("데이터 수집")
     await client.change_presence(status=discord.Status.online, activity=activity)
+    await client.tree.sync()
 
 
 # 메세지 입력 감지 시
@@ -59,12 +68,12 @@ async def on_message(message):
     if message.author == client.user or message.author.bot:
         return
 
-    # 보낸 사람의 ID가 backgwa인 경우 기록
-    if (f"{message.author}" == USER):
-        author  = f"{message.author}"           # 메세지 보낸 사람 저장
-        content = f"{message.content}"          # 메세지 내용 저장
+    author  = f"{message.author}"           # 메세지 보낸 사람 저장
+    content = f"{message.content}"          # 메세지 내용 저장
 
-        db.log(f"===================\n새로운 메세지\n===================", f"{content}")
+    # 보낸 사람의 ID가 backgwa이면서, 명령어가 아닌 경우 기록
+    if (f"{author}" == USER) and not (message.content.startswith("/") or message.content.startswith("!")):
+        db.log(f"[새로운 메세지]", f"{content}")
 
         if message_type(content) != "normal":      # 메세지 타입이 일반이 아닌 경우 무시
             return
@@ -90,6 +99,46 @@ async def on_message(message):
 
         # 이전 채팅 시간을 현재 시간으로 설정
         recent_time = now
+
+
+@client.tree.command(
+    name="logs",
+    description="KILOGWA의 최근 로그를 출력합니다."
+)
+async def logs(interaction):
+    session = db.session
+    recent = db.get_recent()
+    text = recent[0][3] if recent[0][3] != "text" else "N"
+    length = recent[1]
+    date = recent[0][0] if recent[0][0] != "date" else "N"
+    time = recent[0][1] if recent[0][1] != "time" else "N"
+    dt = "N" if date == "N" and time == "N" else f"{date}{time}"
+
+    embed = discord.Embed(
+        description=f"**기록 시각** : `{db.conv_now(dt) if dt != 'N' else '(데이터 없음)'}`",
+        color=0x5bffb1
+    )
+
+    embed.set_author(name="천과 데이터 로그", url="https://github.com/BackGwa/KiloGwa", icon_url="https://cdn.discordapp.com/icons/1209891794980966430/bfc2a0772e281ada64476d4940e3ffed.webp?size=96")
+    embed.set_footer(text=f"{length}개의 데이터 중 마지막 데이터 입니다.")
+
+    embed.add_field(name='**　**\n최근 대화', value=f"`{text_blurred(text) if text != 'N' else '(데이터 없음)'}`\n**　**", inline=False)
+    embed.add_field(name='이전 대화 연관성', value=recent_diff, inline=True)
+    embed.add_field(name='감정 수치', value=recent_feel, inline=True)
+    embed.add_field(name='변동 수치', value=recent_change, inline=True)
+    embed.add_field(name='긍정', value=sum_p, inline=True)
+    embed.add_field(name='중립', value=sum_x, inline=True)
+    embed.add_field(name='부정', value=sum_n, inline=True)
+
+    await interaction.response.send_message(embed=embed)
+
+
+# 텍스트 모자이크
+def text_blurred(text):
+    if len(text) <= 4:
+        return '＃' * len(text)
+    else:
+        return text[0] + '＃' * (len(text) - 2) + text[-1]
 
 
 # 감정 요소 계산
@@ -143,6 +192,7 @@ def feeling(diff, text):
 
 # 문장의 감정 상태 구분
 def detect_feel(text):
+    global recent_change, sum_p, sum_n, sum_x
     score = 0                                               # 0점으로 평가 시작
     p_count = 0                                             # 긍정 횟수 카운트
     n_count = 0                                             # 부정 횟수 카운트
@@ -163,13 +213,13 @@ def detect_feel(text):
         n_count += 1
         db.log(f"글자 수 초과", f"{text_len}")
 
-    for i in P_WORD:                                        # 긍정 단어가 포함되어있고 유효하다면, 점수 증가 (6)
+    for i in P_WORD:                                        # 긍정 단어가 포함되어있고 유효하다면, 점수 증가 (7)
         if i in text and text_len > 4:
-            score += 5
+            score += 7
             db.log(f"긍정 단어 포함", f"{text} <= ({i})")
             p_count += 1
-        elif i in text:                                     # 길이가 유효하지않다면, 점수 증가 (3)
-            score += 2
+        elif i in text:                                     # 길이가 유효하지않다면, 점수 증가 (4)
+            score += 4
             db.log(f"긍정 단어 포함", f"{text} <= ({i})")
             p_count += 1
 
@@ -178,16 +228,21 @@ def detect_feel(text):
             score -= 6
             db.log(f"부정 단어 포함", f"{text} <= ({i})")
             n_count += 1
-        elif i in text:                                     # 길이가 유효하지않다면, 점수 감점 (3)
-            score -= 3
+        elif i in text:                                     # 길이가 유효하지않다면, 점수 감점 (2)
+            score -= 2
             db.log(f"부정 단어 포함", f"{text} <= ({i})")
             n_count += 1
 
     db.log(f"긍정 반영 카운터", f"{p_count}")
     db.log(f"부정 반영 카운터", f"{n_count}")
 
+    sum_p += p_count
+    sum_n += n_count
+    recent_change = score
+
     if p_count == n_count:                                  # 긍정 / 부정 비중 계산 후 결과에 반영
         db.log(f"반영 된 감정 수치", f"neutrality : {score}")
+        sum_x += 1
         return f"x{abs(score)}"
     elif p_count > n_count:
         db.log(f"반영 된 감정 수치", f"positive : {score}")
@@ -222,10 +277,12 @@ def sort_feel(score):
 
 # 연관성 계산
 def difference(dt1, dt2):
+    global recent_diff
     diff = abs(dt1.timestamp() - dt2.timestamp())   # 시간 값 차이 계산
     db.log(f"이전 메세지와 차이 값", diff)
     normal = 1.0 - diff / 180.0                     # 3분을 기준으로 0~1 범위 설정
     db.log(f"메세지 연관성 값", normal)
+    recent_diff = round(normal, 5)
     return round(normal, 5)                         # 소숫점 5자리까지만, 반환
 
 
