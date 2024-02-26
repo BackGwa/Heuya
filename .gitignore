@@ -1,6 +1,5 @@
-dataset/*.csv
-dataset/*.log
-collection/discord-bot/config.json
+dataset/
+res/default/config/secret.json
 __pycache__
 *.pyc
 .venv
