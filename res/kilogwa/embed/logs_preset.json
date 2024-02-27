@@ -1,0 +1,62 @@
+{
+    "config" : {
+        "name" : "로그 출력 임베드",
+        "color" : [255, 82, 82]
+    },
+
+    "embed" : {
+        "header" : {
+            "description" : "**기록 된 시각** : <write_time>"
+        },
+
+        "author" : {
+            "icon" : "https://cdn.discordapp.com/icons/1209891794980966430/bfc2a0772e281ada64476d4940e3ffed.webp",
+            "name" : "천과 데이터 로그",
+            "url" : "https://github.com/BackGwa/KiloGwa"
+        },
+
+        "content" : {
+            "field" : [
+                {
+                    "name" : "**　**\n최근 대화",
+                    "value" : "<recent_message>\n**　**",
+                    "inline" : false
+                },
+                {
+                    "name" : "이전 대화 연관성",
+                    "value" : "<association>",
+                    "inline" : true
+                },
+                {
+                    "name" : "감정 수치",
+                    "value" : "<feel_value> (<feel_name>)",
+                    "inline" : true
+                },
+                {
+                    "name" : "변동 수치",
+                    "value" : "<change_value>",
+                    "inline" : true
+                },
+                {
+                    "name" : "긍정",
+                    "value" : "<positive>",
+                    "inline" : true
+                },
+                {
+                    "name" : "중립",
+                    "value" : "<neutrality>",
+                    "inline" : true
+                },
+                {
+                    "name" : "부정",
+                    "value" : "<negative>",
+                    "inline" : true
+                }
+            ]
+        },
+
+        "footer" : {
+            "text" : "<data_length>개의 데이터 중 마지막 데이터 입니다."
+        }
+    }
+}

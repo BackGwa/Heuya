@@ -1,0 +1,11 @@
+{
+    "metadata": {
+        "name": "흐야",
+        "description": "귀엽고 다양한 기능이 있는 디스코드 봇",
+        "version" : "1.0"
+    },
+
+    "config" : {
+
+    }
+}

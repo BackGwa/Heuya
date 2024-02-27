@@ -1,5 +1,6 @@
-dataset/
-res/default/config/secret.json
 __pycache__
 *.pyc
 .venv
+dataset/
+res/default/config/secret.json
+res/kilogwa/config/wordlist.json

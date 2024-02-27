@@ -1,0 +1,38 @@
+{
+    "config" : {
+        "name" : "정보 출력 임베드",
+        "color" : [196, 237, 255]
+    },
+
+    "embed" : {
+        "header" : {
+            "description" : "흐야의 현재 상태는 이래요!"
+        },
+
+        "author" : {
+            "icon" : "https://cdn.discordapp.com/avatars/1209778017879072788/c65b3f76763ec395b2c53e24aceac554.webp",
+            "name" : "흐야 정보",
+            "url" : "https://github.com/BackGwa/KiloGwa"
+        },
+
+        "content" : {
+            "field" : [
+                {
+                    "name" : "응답 속도",
+                    "value" : "<ping>",
+                    "inline" : true
+                },
+                {
+                    "name" : "버전 정보",
+                    "value" : "<version>",
+                    "inline" : true
+                },
+                {
+                    "name" : "적용되어 있는 모듈",
+                    "value" : "<modules>",
+                    "inline" : false
+                }
+            ]
+        }
+    }
+}

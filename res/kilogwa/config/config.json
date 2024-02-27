@@ -1,0 +1,31 @@
+{
+    "metadata" : {
+        "name" : "천과",
+        "description" : "@backgwa의 채팅을 수집하고, 분석합니다.",
+        "version" : "1.0"
+    },
+
+    "config" : {
+        "username" : ["backgwa"],
+        "savepath" : "/home/klaudSCR/Develop/GitHub/KiloGwa/dataset",
+        "structure" : ["date", "time", "username", "content", "feel", "association"],
+        "valid_time" : 180,
+        "valid_percent" : 0.75,
+        "old_percent" : 0.25,
+        "valid_length" : 4,
+        "score" : {
+            "positive" : {
+                "min" : 3.0,
+                "max" : 7.0
+            },
+            "negative" : {
+                "min" : 2.0,
+                "max" : 6.0
+            }
+        },
+        "penalty" : {
+            "positive" : 1.5,
+            "negative" : 1.25
+        }
+    }
+}
