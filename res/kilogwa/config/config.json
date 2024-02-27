@@ -8,7 +8,7 @@
     "config" : {
         "username" : ["backgwa"],
         "savepath" : "/home/klaudSCR/Develop/GitHub/KiloGwa/dataset",
-        "structure" : ["date", "time", "username", "content", "feel", "association"],
+        "structure" : ["date", "time", "username", "content", "feel_score", "feel", "association"],
         "valid_time" : 180,
         "valid_percent" : 0.75,
         "old_percent" : 0.25,

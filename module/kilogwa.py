@@ -159,7 +159,8 @@ class Kliogwa(Cog):
             csv.write([
                 now.strftime("%Y%m%d"), now.strftime("%H%M%S"),
                 author, content.replace(",", ""),
-                sort_feel(feel), math.to_percent(asso)
+                feel, sort_feel(feel),
+                math.to_percent(asso)
             ])
             self.recent_message = [now, content]
 
