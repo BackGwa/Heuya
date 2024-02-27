@@ -10,7 +10,7 @@
 지금 당장 여러분의 [서버에 초대](https://discord.com/oauth2/authorize?client_id=1209778017879072788&permissions=39979706232320&scope=bot)해보세요!
 
 흐야를 더욱 귀엽고 유용하게 만들고 싶다면,<br>
-해당 레포지토리를 [Fork](https://github.com/BackGwa/FlexFlow/fork)해서 Pull-Request를 올려주세요!<br>
+해당 레포지토리를 [Fork](https://github.com/BackGwa/Heuya/fork)해서 Pull-Request를 올려주세요!<br>
 
 <br>
 
